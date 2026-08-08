@@ -49,7 +49,7 @@ uv run lerobot-rollout \
     --dataset.num_episodes=$n \
     --dataset.fps=$FPS \
     --dataset.streaming_encoding=true \
-    --dataset.rgb_encoder.vcodec=auto \
+    --dataset.rgb_encoder.vcodec=$VCODEC \
     --task="$task" \
     --fps=$FPS \
     --display_data=false
