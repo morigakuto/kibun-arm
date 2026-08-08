@@ -1,18 +1,31 @@
 # きぶんのあるアーム — プロジェクト設定 (fish)
 # 使い方: source env.fish   (各スクリプトは自動で source する)
 
-set -gx LEROBOT_DIR $HOME/cinaps/lerobot
 set -gx HF_USER TECHIdesu
-
-# ── アームのポート ─────────────────────────────────────────────
-# 注意: USBの挿し位置を変えるとポート名が変わる。
-# 旧 local_so101.env は 5B420738481/5B420739401 だったが、現在接続中のデバイスは
-# 5B3D0420591 / 5B3D0474411（2026-08-08 検出）。どちらがリーダーかは未確認なので、
-# scripts/01_teleop_check.fish で確認して、逆だったら下の2行を入れ替えること。
-set -gx FOLLOWER_PORT /dev/tty.usbmodem5B3D0420591
-set -gx LEADER_PORT   /dev/tty.usbmodem5B3D0474411
 set -gx FOLLOWER_ID follower
 set -gx LEADER_ID leader
+
+# ── マシンごとの設定（Mac / Ubuntu 両方で同じスクリプトが動くように）──────
+if test (uname) = Darwin
+    # --- Mac（録画専用機）---
+    set -gx LEROBOT_DIR $HOME/cinaps/lerobot
+    # USBの挿し位置を変えるとポート名が変わる。2026-08-08 検出値。
+    # どちらがリーダーかは 01_teleop_check.fish で確認し、逆なら入れ替える。
+    set -gx FOLLOWER_PORT /dev/tty.usbmodem5B3D0420591
+    set -gx LEADER_PORT   /dev/tty.usbmodem5B3D0474411
+else
+    # --- Ubuntu (tron-workstation, RTX PRO 6000) ---
+    set -gx LEROBOT_DIR $HOME/lerobot-kibun
+    # Linux は挿した順に /dev/ttyACM0, /dev/ttyACM1 が割り当てられる。
+    # 2026-08-08 のロールアウトでは ttyACM0 がフォロワーとして動作した。
+    # 逆だったら 01_teleop_check.fish で確認して入れ替えること。
+    set -gx FOLLOWER_PORT /dev/ttyACM0
+    set -gx LEADER_PORT   /dev/ttyACM1
+    # uv は ~/.local/bin にある。fish の PATH に無いことがあるので通す
+    if not contains $HOME/.local/bin $PATH
+        set -gx PATH $HOME/.local/bin $PATH
+    end
+end
 
 # ── カメラ ────────────────────────────────────────────────────
 # 2026-08-08 13:33 実測（00_find_cameras.fish の結果）:
