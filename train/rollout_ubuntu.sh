@@ -28,6 +28,11 @@ FPS="${FPS:-20}"
 COND="${1:-expressive}"
 NUM="${2:-3}"
 
+# vcodec: "auto" はハードウェアエンコーダ(h264_nvenc)を優先するが、この機体では
+#   avcodec_open2(h264_nvenc) が失敗する（NVML も初期化できていないのでドライバ/ライブラリの不整合）。
+# 640x480@20fps ならソフトウェアエンコードで十分速い。
+VCODEC="${VCODEC:-h264}"
+
 case "$COND" in
   expressive) TASK="Notice the hand and nuzzle it affectionately" ;;
   functional) TASK="Move to the hand" ;;
@@ -102,7 +107,7 @@ uv run lerobot-rollout \
     --dataset.fps="$FPS" \
     --dataset.push_to_hub=false \
     --dataset.streaming_encoding=true \
-    --dataset.rgb_encoder.vcodec=auto \
+    --dataset.rgb_encoder.vcodec="$VCODEC" \
     --task="$TASK" \
     --fps="$FPS" \
     --display_data=false
