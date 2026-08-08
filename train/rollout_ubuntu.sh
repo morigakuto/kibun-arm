@@ -33,6 +33,16 @@ NUM="${2:-3}"
 # 640x480@20fps ならソフトウェアエンコードで十分速い。
 VCODEC="${VCODEC:-h264}"
 
+# SmolVLA は smolvla_base の入力名（camera1/2/3）を引き継ぐので、学習時に
+#   --rename_map='{"observation.images.side": "observation.images.camera1"}'
+# を付けた。ロボットは observation.images.side を出すため、推論側にも同じ変換が要る。
+# ACT は自前のデータセットの特徴名で学習するので不要。
+#   RENAME=1 ./rollout_ubuntu.sh expressive 3 <smolvlaのcheckpoint>
+RENAME_ARG=""
+if [ "${RENAME:-0}" = "1" ]; then
+  RENAME_ARG='--rename_map={"observation.images.side": "observation.images.camera1"}'
+fi
+
 case "$COND" in
   expressive) TASK="Notice the hand and nuzzle it affectionately" ;;
   functional) TASK="Move to the hand" ;;
@@ -110,4 +120,5 @@ uv run lerobot-rollout \
     --dataset.rgb_encoder.vcodec="$VCODEC" \
     --task="$TASK" \
     --fps="$FPS" \
-    --display_data=false
+    --display_data=false \
+    ${RENAME_ARG:+"$RENAME_ARG"}
