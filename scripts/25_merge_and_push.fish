@@ -27,17 +27,41 @@ echo "統合: $repo_expr + $repo_func"
 echo "   → $merged"
 echo "   root: $merged_root"
 
+if test -d $merged_root
+    echo "⚠ 統合先が既に存在します（前回の失敗の残骸かも）。消してから再実行してください:"
+    echo "    rm -rf $merged_root"
+    exit 1
+end
+
 cd $LEROBOT_DIR
+# concatenate_videos=false が重要。true（既定）だと全動画を1本に再多重化しようとして
+#   av.error.ValueError: Invalid argument / non monotonically increasing dts
+# で落ちる。false なら元の動画ファイルをそのまま参照するので安全かつ一瞬で終わる。
 uv run lerobot-edit-dataset \
     --operation.type=merge \
     --operation.repo_ids="[$repo_expr, $repo_func]" \
     --operation.roots="[$root_expr, $root_func]" \
+    --operation.concatenate_videos=false \
     --new_repo_id="$merged" \
     --new_root="$merged_root" \
     --push_to_hub=$PUSH
 
+if test $status -ne 0
+    echo ""
+    echo "✗ 統合に失敗しました。残骸を消してから相談してください:"
+    echo "    rm -rf $merged_root"
+    exit 1
+end
+
+# 中身が読めるか確認してから完了を宣言する
+set n (python3 -c "import json;print(json.load(open('$merged_root/meta/info.json'))['total_episodes'])" 2>/dev/null; or echo "")
+if test -z "$n"
+    echo "✗ 統合先の meta/info.json が読めません。失敗しています"
+    exit 1
+end
+
 echo ""
-echo "統合完了。SmolVLA の学習:"
+echo "✓ 統合完了: $n 本。SmolVLA の学習:"
 echo "  cd \$LEROBOT_DIR"
 echo "  uv run lerobot-train \\"
 echo "    --dataset.repo_id=$merged --dataset.root=$merged_root \\"
