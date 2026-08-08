@@ -30,7 +30,14 @@
 #   スリスリ中に手をゆっくり動かし、ついていく。ELEGNT §5.2.3 は
 #   「能力と動きのミスマッチは即座に嘘に見える」と指摘（P20: 頭にカメラが無いと思ったので
 #   "メモを見る" 動作が嘘くさかった）。追えないのに追うふりは厳禁。だから実際に追従を仕込む。
+#
+# ■ rerun-sdk が無いと ImportError で落ちる。画角確認には表示が要るので入れること:
+#     cd ~/lerobot-kibun
+#     uv sync --locked --python 3.12 --extra training --extra smolvla --extra feetech --extra viz
+#   ※ uv sync は環境を作り直すので extra は全部並べる（--extra viz だけだと他が消える）
+#   表示なしで動作だけ見たい場合: DISPLAY_DATA=false ./01_teleop_check.fish
 source (dirname (status filename))/../env.fish
+set -q DISPLAY_DATA; or set -gx DISPLAY_DATA true
 cd $LEROBOT_DIR
 uv run lerobot-teleoperate \
     --robot.type=so101_follower \
@@ -41,4 +48,4 @@ uv run lerobot-teleoperate \
     --teleop.id="$LEADER_ID" \
     --robot.cameras="$CAMERAS" \
     --fps=$FPS \
-    --display_data=true
+    --display_data=$DISPLAY_DATA
