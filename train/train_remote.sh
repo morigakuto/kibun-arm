@@ -31,6 +31,14 @@ PUSH_TO_HUB="${PUSH_TO_HUB:-false}"
 DATA_ROOT="${DATA_ROOT:-}"
 STEPS="${STEPS:-20000}"
 
+# ★ Python は 3.12 に固定すること。
+# lerobot の pyproject は requires-python = ">=3.12" なので、uv は環境にある最新
+# （3.14 など）を選んでしまう。Python 3.14 で argparse の add_argument が
+# 型を検証するようになり、draccus が `str | None` という Union 型を type= に渡すため
+#   TypeError: <class 'str' | None> is not callable
+# で引数パース前に落ちる。Mac 側の録画環境も 3.12.12 なので揃えておく。
+PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
+
 # ── 環境構築（初回のみ。GitHubログイン不要）──────────────────
 if [ ! -d "$WORKDIR" ]; then
   git clone https://github.com/huggingface/lerobot "$WORKDIR"
@@ -39,8 +47,14 @@ cd "$WORKDIR"
 git fetch --all --quiet || true
 git checkout "$LEROBOT_COMMIT"
 command -v uv >/dev/null 2>&1 || { curl -LsSf https://astral.sh/uv/install.sh | sh; export PATH="$HOME/.local/bin:$PATH"; }
-uv sync --locked --extra training --extra smolvla
-uv run python -c "import torch; assert torch.cuda.is_available(), 'CUDA not available!'; print('GPU:', torch.cuda.get_device_name(0))"
+
+# 既存の .venv が別バージョンで作られていたら作り直す（3.14で作られた環境が残っていると直らない）
+if [ -d .venv ] && ! .venv/bin/python -V 2>/dev/null | grep -q "Python $PYTHON_VERSION"; then
+  echo "既存の .venv が Python $PYTHON_VERSION ではないので作り直します: $(.venv/bin/python -V 2>&1)"
+  rm -rf .venv
+fi
+uv sync --locked --python "$PYTHON_VERSION" --extra training --extra smolvla
+uv run python -c "import sys, torch; print('Python:', sys.version.split()[0]); assert torch.cuda.is_available(), 'CUDA not available!'; print('GPU:', torch.cuda.get_device_name(0))"
 
 # データセットの指定: DATA_ROOT があればローカル（USB）、無ければ HF から
 dataset_args () {
