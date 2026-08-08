@@ -43,6 +43,17 @@ if [ "${RENAME:-0}" = "1" ]; then
   RENAME_ARG='--rename_map={"observation.images.side": "observation.images.camera1"}'
 fi
 
+# ── カクつき対策の2つのつまみ ──────────────────────────────────
+# ① MAXREL: 1ステップあたりの関節移動量の上限（安全クランプ）。
+#    小さいと大きく動きたい瞬間に階段状になる＝「角が立つ」。
+#    立ち上がりがカクつくならまずここを 15〜20 に上げる。無制限は none。
+MAXREL="${MAXREL:-5}"
+# ② INTERP: 行動の線形補間。N を上げると制御レートが N 倍になり滑らかになる。
+#    学習時の行動レート(20Hz)は保ったまま、ロボットへの指令だけ細かくする必要があるので
+#    fps も同時に N 倍する。INTERP=3 → 60Hzで指令、20Hzで行動を消費。
+INTERP="${INTERP:-1}"
+ROBOT_FPS=$(( FPS * INTERP ))
+
 case "$COND" in
   expressive) TASK="Notice the hand and nuzzle it affectionately" ;;
   functional) TASK="Move to the hand" ;;
@@ -111,7 +122,7 @@ uv run lerobot-rollout \
     --robot.port="$FOLLOWER_PORT" \
     --robot.id=follower \
     --robot.cameras="{side: {type: opencv, index_or_path: $CAM_INDEX, width: 640, height: 480, fps: 30}}" \
-    --robot.max_relative_target=5 \
+    --robot.max_relative_target=$MAXREL \
     --dataset.repo_id="$HF_USER/rollout_${COND}" \
     --dataset.num_episodes="$NUM" \
     --dataset.fps="$FPS" \
@@ -119,6 +130,7 @@ uv run lerobot-rollout \
     --dataset.streaming_encoding=true \
     --dataset.rgb_encoder.vcodec="$VCODEC" \
     --task="$TASK" \
-    --fps="$FPS" \
+    --fps="$ROBOT_FPS" \
+    --interpolation_multiplier="$INTERP" \
     --display_data=false \
     ${RENAME_ARG:+"$RENAME_ARG"}
