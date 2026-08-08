@@ -53,7 +53,9 @@ if [ -d .venv ] && ! .venv/bin/python -V 2>/dev/null | grep -q "Python $PYTHON_V
   echo "既存の .venv が Python $PYTHON_VERSION ではないので作り直します: $(.venv/bin/python -V 2>&1)"
   rm -rf .venv
 fi
-uv sync --locked --python "$PYTHON_VERSION" --extra training --extra smolvla
+# feetech は実機（SO-101のモーター）を動かすのに必要。学習だけなら不要だが、
+# 同じマシンでロールアウトもする場合に無いと ImportError になるので最初から入れておく
+uv sync --locked --python "$PYTHON_VERSION" --extra training --extra smolvla --extra feetech
 uv run python -c "import sys, torch; print('Python:', sys.version.split()[0]); assert torch.cuda.is_available(), 'CUDA not available!'; print('GPU:', torch.cuda.get_device_name(0))"
 
 # データセットの指定: DATA_ROOT があればローカル（USB）、無ければ HF から

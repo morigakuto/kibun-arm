@@ -21,6 +21,7 @@ fi
 HF_USER=TECHIdesu
 PREFIX=nuzzle_hand_v1
 WORKDIR="${WORKDIR:-$HOME/lerobot-kibun}"
+PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 FPS="${FPS:-20}"
 
@@ -39,6 +40,15 @@ if [ ! -d "$POLICY" ]; then
   echo "存在するチェックポイント:"
   find "$WORKDIR/outputs/train" -name pretrained_model 2>/dev/null | sed 's/^/  /'
   exit 1
+fi
+
+# ── 0) feetech（モーターSDK）が入っているか ──────────────────
+# 学習用に作った環境（--extra training --extra smolvla）には入っていない。
+# 無いと robot 接続時に ImportError: 'feetech-servo-sdk' is required で落ちる。
+if ! (cd "$WORKDIR" && uv run python -c "import scservo_sdk" >/dev/null 2>&1); then
+  echo "feetech ドライバが未インストールなので追加します（1〜2分）..."
+  (cd "$WORKDIR" && uv sync --locked --python "$PYTHON_VERSION" \
+      --extra training --extra smolvla --extra feetech)
 fi
 
 # ── 1) キャリブレーションを配置 ────────────────────────────────
