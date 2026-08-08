@@ -9,6 +9,15 @@
 #   3) ポートのパーミッションを確認
 set -euo pipefail
 
+# uv は curl インストーラで ~/.local/bin に入る。新しいシェルでは PATH に無いことがあるので通す
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+if ! command -v uv >/dev/null 2>&1; then
+  echo "✗ uv が見つかりません。インストール:"
+  echo "    curl -LsSf https://astral.sh/uv/install.sh | sh"
+  echo "  既に入っているなら場所を確認: ls ~/.local/bin/uv ~/.cargo/bin/uv"
+  exit 1
+fi
+
 HF_USER=TECHIdesu
 PREFIX=nuzzle_hand_v1
 WORKDIR="${WORKDIR:-$HOME/lerobot-kibun}"
