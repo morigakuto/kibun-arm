@@ -64,11 +64,20 @@ function kibun_repo --description "条件名から最新のタイムスタンプ
     # lerobot-edit-dataset は in-place 編集の前に元を `_old` へリネームしてバックアップするので、
     # それは候補から除外する（拾うと古いデータに resume してしまう）。
     set -l found (find $base -maxdepth 1 -type d -name "$DATASET_PREFIX"_"$cond"_'*' ! -name '*_old' 2>/dev/null | sort)
-    if test (count $found) -eq 0
+    # 作成直後にクラッシュしたデータセットはディレクトリだけ残り meta/tasks.parquet が無い。
+    # それに --resume すると、ローカルに読めるものが無いので HF Hub に問い合わせに行き、
+    # 未ログインだと 401 RepositoryNotFoundError で落ちる。中身のあるものだけを候補にする。
+    set -l valid
+    for d in $found
+        if test -f $d/meta/info.json -a -f $d/meta/tasks.parquet
+            set -a valid $d
+        end
+    end
+    if test (count $valid) -eq 0
         return 1
     end
     # 名前末尾が YYYYmmdd_HHMMSS なので辞書順ソートの最後が最新
-    echo $HF_USER/(basename $found[-1])
+    echo $HF_USER/(basename $valid[-1])
 end
 
 function kibun_root --description "repo_id からローカルの root パスを返す"
