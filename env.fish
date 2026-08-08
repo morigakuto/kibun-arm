@@ -9,6 +9,8 @@ set -gx LEADER_ID leader
 if test (uname) = Darwin
     # --- Mac（録画専用機）---
     set -gx LEROBOT_DIR $HOME/cinaps/lerobot
+    # auto → h264_videotoolbox（動作実績あり。既存22本もこれで録った）
+    set -gx VCODEC auto
     # USBの挿し位置を変えるとポート名が変わる。2026-08-08 検出値。
     # どちらがリーダーかは 01_teleop_check.fish で確認し、逆なら入れ替える。
     set -gx FOLLOWER_PORT /dev/tty.usbmodem5B3D0420591
@@ -16,6 +18,11 @@ if test (uname) = Darwin
 else
     # --- Ubuntu (tron-workstation, RTX PRO 6000) ---
     set -gx LEROBOT_DIR $HOME/lerobot-kibun
+    # ★ auto にしてはいけない。この機体は NVIDIAドライバの版ずれ
+    #   （カーネル 580.159.03 / NVML 580.173）で h264_nvenc が
+    #   avcodec_open2 に失敗し、録画が Encoder thread crashed で落ちる。
+    #   ソフトウェアの h264 を明示する。640x480@20fps なら十分速い。
+    set -gx VCODEC h264
     # Linux は挿した順に /dev/ttyACM0, /dev/ttyACM1 が割り当てられる。
     # 2026-08-08 のロールアウトでは ttyACM0 がフォロワーとして動作した。
     # 逆だったら 01_teleop_check.fish で確認して入れ替えること。

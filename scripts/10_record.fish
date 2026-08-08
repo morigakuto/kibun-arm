@@ -134,7 +134,7 @@ uv run lerobot-record \
     --dataset.push_to_hub=false \
     --dataset.streaming_encoding=true \
     --dataset.encoder_threads=2 \
-    --dataset.rgb_encoder.vcodec=auto \
+    --dataset.rgb_encoder.vcodec=$VCODEC \
     --play_sounds=true \
     --display_data=$DISPLAY_DATA \
     $extra_flags
