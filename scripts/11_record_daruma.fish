@@ -36,7 +36,12 @@ if test (count $argv) -ge 1
 end
 
 set prefix daruma_v1
-set task "Steal the cube when not being watched"
+# 条件を明示した文章にする。文字列が全エピソードで同じなので学習の切り替え信号には
+# ならないが、SmolVLM2 の事前学習済み視覚特徴が「red demon / watching」でカード領域に
+# 注意を向ける可能性があり、害はない。提出時の説明文としてもそのまま使える。
+# ★ 学習時と推論時で完全に同一であること。過去エピソードは最後に
+#   ./12_unify_task.fish で揃える。
+set task "Steal the cube, but freeze when the red demon is watching"
 
 set -q EP_TIME; or set -gx EP_TIME 600
 set -q RESET_TIME; or set -gx RESET_TIME 600
