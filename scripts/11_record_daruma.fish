@@ -49,7 +49,12 @@ if test (count $argv) -ge 1
     set n $argv[1]
 end
 
-set prefix daruma_v1
+# カメラ構成を変えたら**必ず新しい prefix**にすること。
+# 既存データセットとカメラの数・名前が違うと lerobot が追記を拒否する
+# （Dataset metadata compatibility check failed）。
+#   3カメラで新規収集: CAM_SET=3 PREFIX=daruma_v2 ./11_record_daruma.fish 40
+set -q PREFIX; or set -gx PREFIX daruma_v1
+set prefix $PREFIX
 # 条件を明示した文章にする。文字列が全エピソードで同じなので学習の切り替え信号には
 # ならないが、SmolVLM2 の事前学習済み視覚特徴が「red demon / watching」でカード領域に
 # 注意を向ける可能性があり、害はない。提出時の説明文としてもそのまま使える。
@@ -84,6 +89,8 @@ else
 end
 
 echo "== daruma / $n 本 =="
+echo "prefix: $prefix"
+echo "カメラ: "(echo $CAMERAS | grep -oE '[a-z_]+: \{type' | tr -d ' {' | sed 's/:type//' | tr '\n' ' ')
 echo "task: \"$task\""
 echo "→(n)=フェーズ終了（1本につき2回） ←(r)=撮り直し Esc(q)=終了"
 echo "⚠ 連打禁止。1回押したら音声アナウンスを待つこと"
