@@ -53,18 +53,13 @@ else
 end
 
 # ── カメラ ────────────────────────────────────────────────────
-# 2026-08-08 13:33 実測（00_find_cameras.fish の結果）:
-#   index 0 = Innomaker 外付け (1920x1080@30) ← 使える。唯一の外付け
-#   index 1 = MacBook内蔵カメラ (@15fps)      ← 顔と天井が映る。学習に使うと壊れる
-#   index 2 = iPhone Continuity (@1fps, 真っ黒) ← 未接続状態
-# 2台目の外付けをつないだら 00_find_cameras.fish で index を再確認すること。
-
-# --- A) 2カメラ構成（推奨。2台目をつないでから index を実測して直す）---
-# set -gx CAMERAS '{wrist: {type: opencv, index_or_path: 0, width: 640, height: 480, fps: 30}, side: {type: opencv, index_or_path: 3, width: 640, height: 480, fps: 30}}'
-
-# --- B) 1カメラ構成（今すぐ録るならこれ。外付け1台だけ）---
-# 手の出現と接近が一番よく見える位置に固定すること（真横 or 斜め上前方）。
-set -gx CAMERAS '{side: {type: opencv, index_or_path: 0, width: 640, height: 480, fps: 30}}'
+# ★ Linux 側の CAMERAS は上の分岐で by-id の3台構成を設定済み。
+#   ここで再代入すると上書きしてしまうので、Mac のときだけ設定する。
+#   （2026-08-09、この行が3カメラ設定を潰して1台しか録れていなかった）
+if test (uname) = Darwin
+    # Mac は外付け1台（Innomaker）。index 1 は内蔵カメラなので使わないこと。
+    set -gx CAMERAS '{side: {type: opencv, index_or_path: 0, width: 640, height: 480, fps: 30}}'
+end
 
 set -gx FPS 20
 set -gx DATASET_PREFIX nuzzle_hand_v1

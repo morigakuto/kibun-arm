@@ -14,9 +14,6 @@ set out $HOME/camera_check.png
 set tmpdir /tmp/camcheck
 rm -rf $tmpdir; mkdir -p $tmpdir
 
-echo "== 設定されているカメラ =="
-echo $CAMERAS | tr ',' '\n' | grep -oE '^\s*\{?[a-z_]+:' | tr -d ' {:' | sed 's/^/  - /'
-
 cd $LEROBOT_DIR
 uv run python -c "
 import cv2, re, sys, pathlib, numpy as np
