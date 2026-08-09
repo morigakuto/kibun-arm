@@ -65,6 +65,16 @@ set task "Steal the cube, but freeze when the red demon is watching"
 set -q EP_TIME; or set -gx EP_TIME 600
 set -q RESET_TIME; or set -gx RESET_TIME 600
 set -q DISPLAY_DATA; or set -gx DISPLAY_DATA false
+# rerun の表示先。この機体はGPUドライバの版ずれでソフトウェア描画になり、
+# ローカルにウィンドウを出すとX11で落ちる。Mac側でビューアを立てて Tailscale 経由で送る:
+#   Mac:    cd ~/cinaps/lerobot && uv run rerun --bind 0.0.0.0 --port 9876
+#   Ubuntu: DISPLAY_DATA=true ./11_record_daruma.fish ...
+set -q DISPLAY_IP; or set -gx DISPLAY_IP 100.94.6.25
+set -q DISPLAY_PORT; or set -gx DISPLAY_PORT 9876
+set display_args
+if test "$DISPLAY_DATA" = true
+    set display_args --display_ip=$DISPLAY_IP --display_port=$DISPLAY_PORT
+end
 
 # 既存があれば追記、無ければ新規（10_record.fish と同じ解決方法。壊れたものは弾く）
 set base $HOME/.cache/huggingface/lerobot/$HF_USER
@@ -117,4 +127,5 @@ uv run lerobot-record \
     --dataset.rgb_encoder.vcodec=$VCODEC \
     --play_sounds=true \
     --display_data=$DISPLAY_DATA \
+    $display_args \
     $extra_flags

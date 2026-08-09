@@ -38,6 +38,16 @@
 #   表示なしで動作だけ見たい場合: DISPLAY_DATA=false ./01_teleop_check.fish
 source (dirname (status filename))/../env.fish
 set -q DISPLAY_DATA; or set -gx DISPLAY_DATA true
+# rerun の表示先。Ubuntu機はGPUドライバの版ずれでローカル表示が落ちるため、
+# Mac側のビューアへ Tailscale 経由で送る（Macで先に起動しておくこと）:
+#   cd ~/cinaps/lerobot && uv run rerun --bind 0.0.0.0 --port 9876
+set display_args
+if test (uname) != Darwin -a "$DISPLAY_DATA" = true
+    set -q DISPLAY_IP; or set -gx DISPLAY_IP 100.94.6.25
+    set -q DISPLAY_PORT; or set -gx DISPLAY_PORT 9876
+    set display_args --display_ip=$DISPLAY_IP --display_port=$DISPLAY_PORT
+    echo "rerun の表示先: $DISPLAY_IP:$DISPLAY_PORT （Mac側のビューア）"
+end
 cd $LEROBOT_DIR
 uv run lerobot-teleoperate \
     --robot.type=so101_follower \
@@ -48,4 +58,5 @@ uv run lerobot-teleoperate \
     --teleop.id="$LEADER_ID" \
     --robot.cameras="$CAMERAS" \
     --fps=$FPS \
-    --display_data=$DISPLAY_DATA
+    --display_data=$DISPLAY_DATA \
+    $display_args
