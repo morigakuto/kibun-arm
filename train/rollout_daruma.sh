@@ -23,8 +23,8 @@ case "$KIND" in
     RENAME_ARG=""
     ;;
   smolvla)
-    POLICY="${3:-$WORKDIR/outputs/train/smolvla_daruma/checkpoints/last/pretrained_model}"
-    RENAME_ARG='--rename_map={"observation.images.side": "observation.images.camera1"}'
+    POLICY="${3:-$WORKDIR/outputs/train/smolvla_daruma_v3/checkpoints/last/pretrained_model}"
+    RENAME_ARG='--rename_map={"observation.images.wrist": "observation.images.camera1", "observation.images.front": "observation.images.camera2", "observation.images.side": "observation.images.camera3"}'
     ;;
   *) echo "usage: $0 <act|smolvla> [本数] [policy_path]"; exit 1 ;;
 esac
@@ -53,7 +53,13 @@ if [ ! -w "$FOLLOWER_PORT" ]; then
   exit 1
 fi
 
-CAM_INDEX="${CAM_INDEX:-0}"
+# カメラは学習時と同一構成でなければならない（3カメラ・by-idの不変パス・MJPG）。
+# 1台でも欠けたり名前が違うと特徴量不一致でポリシーが読めない。
+BY=/dev/v4l/by-id
+CAM_W=$BY/usb-Innomaker_Innomaker-U20CAM-1080p-S1_SN0001-video-index0
+CAM_F=$BY/usb-046d_HD_Pro_Webcam_C920-video-index0
+CAM_S=$BY/usb-Global_Shutter_Camera_Global_Shutter_Camera_01.00.00-video-index0
+CAMERAS="{wrist: {type: opencv, index_or_path: $CAM_W, width: 640, height: 480, fps: 30, fourcc: MJPG}, front: {type: opencv, index_or_path: $CAM_F, width: 640, height: 480, fps: 30, fourcc: MJPG}, side: {type: opencv, index_or_path: $CAM_S, width: 640, height: 480, fps: 30, fourcc: MJPG}}"
 cd "$WORKDIR"
 echo "== daruma / $KIND / $NUM 本 =="
 echo "policy: $POLICY"
@@ -67,7 +73,7 @@ uv run lerobot-rollout \
     --robot.type=so101_follower \
     --robot.port="$FOLLOWER_PORT" \
     --robot.id=follower \
-    --robot.cameras="{side: {type: opencv, index_or_path: $CAM_INDEX, width: 640, height: 480, fps: 30}}" \
+    --robot.cameras="$CAMERAS" \
     --robot.max_relative_target=$MAXREL \
     --dataset.repo_id="TECHIdesu/rollout_daruma_${KIND}" \
     --dataset.num_episodes="$NUM" \
