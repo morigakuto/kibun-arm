@@ -34,7 +34,13 @@ else
     #   CAM_SET=3 ./scripts/... で3カメラ構成（新規データセット用）
     set -q CAM_SET; or set -gx CAM_SET 1
     if test "$CAM_SET" = 3
-        set -gx CAMERAS "{wrist: {type: opencv, index_or_path: $CAM_WRIST, width: 640, height: 480, fps: 30}, front: {type: opencv, index_or_path: $CAM_FRONT, width: 640, height: 480, fps: 30}, side: {type: opencv, index_or_path: $CAM_SIDE, width: 640, height: 480, fps: 30}}"
+        # ★ fourcc=MJPG が必須。無圧縮(YUYV)だと 640x480@30 で1台18MB/s、
+        #   3台で55MB/s となり USB2.0 の実効帯域(約35MB/s)を超えて
+        #   "latest frame is too old" でフレームが来なくなる。
+        #   MJPGなら帯域が約1/10。デコードのCPU負荷は増えるがこの機体なら余裕。
+        #   それでも落ちる場合は fps を 15 に下げる（CAM_FPS=15）。
+        set -q CAM_FPS; or set -gx CAM_FPS 30
+        set -gx CAMERAS "{wrist: {type: opencv, index_or_path: $CAM_WRIST, width: 640, height: 480, fps: $CAM_FPS, fourcc: MJPG}, front: {type: opencv, index_or_path: $CAM_FRONT, width: 640, height: 480, fps: $CAM_FPS, fourcc: MJPG}, side: {type: opencv, index_or_path: $CAM_SIDE, width: 640, height: 480, fps: $CAM_FPS, fourcc: MJPG}}"
     else
         set -gx CAMERAS "{side: {type: opencv, index_or_path: $CAM_WRIST, width: 640, height: 480, fps: 30}}"
     end
