@@ -73,7 +73,11 @@ set -q DISPLAY_IP; or set -gx DISPLAY_IP 100.94.6.25
 set -q DISPLAY_PORT; or set -gx DISPLAY_PORT 9876
 set display_args
 if test "$DISPLAY_DATA" = true
-    set display_args --display_ip=$DISPLAY_IP --display_port=$DISPLAY_PORT
+    # display_compressed_images=true でJPEG圧縮してから送る。
+    # 3カメラをTailscale越しに生で流すと帯域を食ってフレーム落ちの原因になる。
+    set display_args --display_ip=$DISPLAY_IP --display_port=$DISPLAY_PORT --display_compressed_images=true
+    echo "rerun の表示先: $DISPLAY_IP:$DISPLAY_PORT （Mac側のビューア）"
+    echo "⚠ 'Record loop is running slower' が出たら DISPLAY_DATA を外して録り直すこと"
 end
 
 # 既存があれば追記、無ければ新規（10_record.fish と同じ解決方法。壊れたものは弾く）
