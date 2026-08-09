@@ -30,6 +30,20 @@
 #   - グリッパーは今回**使う**（把持する）。リーダーのトリガーの輪ゴムは外すこと
 source (dirname (status filename))/../env.fish
 
+# ★ 全カメラが開けることを録画前に必ず確認する（2026-08-09 に手首1台だけで
+#   26本録ってしまった事故の再発防止）。SKIP_CAM_CHECK=1 で飛ばせるが非推奨。
+if test "$SKIP_CAM_CHECK" != 1
+    echo "カメラを確認しています..."
+    set -l camcheck (dirname (status filename))/00_check_cameras.fish
+    if not $camcheck >/dev/null 2>&1
+        echo ""
+        echo "✗ 開けないカメラがあります。録画を中止しました。"
+        echo "  詳細:  ./scripts/00_check_cameras.fish"
+        exit 1
+    end
+    echo "✓ 全カメラOK（映っている中身は ~/camera_check.png で目視すること）"
+end
+
 set n 40
 if test (count $argv) -ge 1
     set n $argv[1]

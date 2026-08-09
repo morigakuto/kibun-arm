@@ -18,6 +18,16 @@ if test (uname) = Darwin
 else
     # --- Ubuntu (tron-workstation, RTX PRO 6000) ---
     set -gx LEROBOT_DIR $HOME/lerobot-kibun
+    # ── カメラ3台（by-id の不変パス。/dev/video* の番号は挿し直しでずれる）──
+    # 2026-08-09 の失敗: index 0 の1台（手首）しか録っておらず、把持・運搬中は
+    # カードが画角外で「鬼が見えない」データになっていた。必ず3台とも録ること。
+    # 録画前に必ず ./scripts/00_check_cameras.fish で3枚とも映っているか目視する。
+    set -l cam /dev/v4l/by-id
+    set -gx CAM_WRIST $cam/usb-Innomaker_Innomaker-U20CAM-1080p-S1_SN0001-video-index0
+    set -gx CAM_FRONT $cam/usb-046d_HD_Pro_Webcam_C920-video-index0
+    set -gx CAM_SIDE  $cam/usb-Global_Shutter_Camera_Global_Shutter_Camera_01.00.00-video-index0
+    set -gx CAMERAS "{wrist: {type: opencv, index_or_path: $CAM_WRIST, width: 640, height: 480, fps: 30}, front: {type: opencv, index_or_path: $CAM_FRONT, width: 640, height: 480, fps: 30}, side: {type: opencv, index_or_path: $CAM_SIDE, width: 640, height: 480, fps: 30}}"
+
     # ★ auto にしてはいけない。この機体は NVIDIAドライバの版ずれ
     #   （カーネル 580.159.03 / NVML 580.173）で h264_nvenc が
     #   avcodec_open2 に失敗し、録画が Encoder thread crashed で落ちる。
