@@ -23,11 +23,19 @@ else
     #   avcodec_open2 に失敗し、録画が Encoder thread crashed で落ちる。
     #   ソフトウェアの h264 を明示する。640x480@20fps なら十分速い。
     set -gx VCODEC h264
-    # Linux は挿した順に /dev/ttyACM0, /dev/ttyACM1 が割り当てられる。
-    # 2026-08-08 のロールアウトでは ttyACM0 がフォロワーとして動作した。
-    # 逆だったら 01_teleop_check.fish で確認して入れ替えること。
-    set -gx FOLLOWER_PORT /dev/ttyACM0
-    set -gx LEADER_PORT   /dev/ttyACM1
+    # ★ /dev/ttyACM0,1 は挿し直すたびに番号が変わる（実際 2026-08-09 に ttyACM1,2 へずれて
+    #   "No such file or directory: /dev/ttyACM0" で落ちた）。
+    #   /dev/serial/by-id/ はシリアル番号ベースで不変なので、そちらを優先して使う。
+    #   末尾の数字は Mac 側のポート名（...5B3D0420591 / ...5B3D0474411）と同じ個体を指す。
+    set -l by_id /dev/serial/by-id
+    if test -e $by_id/usb-1a86_USB_Single_Serial_5B3D042059-if00
+        set -gx FOLLOWER_PORT $by_id/usb-1a86_USB_Single_Serial_5B3D042059-if00
+        set -gx LEADER_PORT   $by_id/usb-1a86_USB_Single_Serial_5B3D047441-if00
+    else
+        # by-id が無い環境向けのフォールバック（番号は都度確認すること）
+        set -gx FOLLOWER_PORT /dev/ttyACM0
+        set -gx LEADER_PORT   /dev/ttyACM1
+    end
     # uv は ~/.local/bin にある。fish の PATH に無いことがあるので通す
     if not contains $HOME/.local/bin $PATH
         set -gx PATH $HOME/.local/bin $PATH
