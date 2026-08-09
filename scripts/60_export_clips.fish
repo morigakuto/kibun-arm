@@ -53,7 +53,9 @@ for cam in vkeys:
         if want is not None and ep not in want:
             continue
         src = root/'videos'/cam/f'chunk-{int(r[ci]):03d}'/f'file-{int(r[fi]):03d}.mp4'
-        dst = outdir/f'{name}_ep{ep:03d}.mp4'
+        # カメラ名をファイル名に入れないと、3カメラが同じ名前で上書きし合う
+        short = cam.replace('observation.images.', '')
+        dst = outdir/f'{name}_ep{ep:03d}_{short}.mp4'
         dur = float(r[ts1]) - float(r[ts0])
         cmd = ['ffmpeg','-v','error','-y','-ss',str(float(r[ts0])),'-t',str(dur),
                '-i',str(src),'-c:v','libx264','-crf','20','-pix_fmt','yuv420p',str(dst)]
