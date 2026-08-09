@@ -26,7 +26,18 @@ else
     set -gx CAM_WRIST $cam/usb-Innomaker_Innomaker-U20CAM-1080p-S1_SN0001-video-index0
     set -gx CAM_FRONT $cam/usb-046d_HD_Pro_Webcam_C920-video-index0
     set -gx CAM_SIDE  $cam/usb-Global_Shutter_Camera_Global_Shutter_Camera_01.00.00-video-index0
-    set -gx CAMERAS "{wrist: {type: opencv, index_or_path: $CAM_WRIST, width: 640, height: 480, fps: 30}, front: {type: opencv, index_or_path: $CAM_FRONT, width: 640, height: 480, fps: 30}, side: {type: opencv, index_or_path: $CAM_SIDE, width: 640, height: 480, fps: 30}}"
+
+    # ★ カメラ構成はデータセットと一致していないと追記できない。
+    #   既存の daruma_v1 / nuzzle_* は「side 1台（実体はInnomaker=手首）」で録ってあるので、
+    #   追記する限りは CAM_SET=1 のままにすること。3台に変えると
+    #   "Dataset metadata compatibility check failed" で弾かれる（＝新規データセットになる）。
+    #   CAM_SET=3 ./scripts/... で3カメラ構成（新規データセット用）
+    set -q CAM_SET; or set -gx CAM_SET 1
+    if test "$CAM_SET" = 3
+        set -gx CAMERAS "{wrist: {type: opencv, index_or_path: $CAM_WRIST, width: 640, height: 480, fps: 30}, front: {type: opencv, index_or_path: $CAM_FRONT, width: 640, height: 480, fps: 30}, side: {type: opencv, index_or_path: $CAM_SIDE, width: 640, height: 480, fps: 30}}"
+    else
+        set -gx CAMERAS "{side: {type: opencv, index_or_path: $CAM_WRIST, width: 640, height: 480, fps: 30}}"
+    end
 
     # ★ auto にしてはいけない。この機体は NVIDIAドライバの版ずれ
     #   （カーネル 580.159.03 / NVML 580.173）で h264_nvenc が
